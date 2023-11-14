@@ -1,0 +1,15 @@
+{
+  "name": "api-rest-aws",
+  "version": "1.0.0",
+  "description": "Proyecto de una aplicación REST que posteriormente se desplegarla en un EC2",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
