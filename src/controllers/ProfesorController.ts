@@ -1,9 +1,13 @@
 import { Request, Response } from 'express';
 import { Profesor } from "../entity/Profesor";
 import { ProfesorRepository } from "../repository/ProfesorRepository";
+import { ProfesorValidatorService } from '../service/validateProfesorService';
 
 export class ProfesorController {
-  constructor(private readonly profesorRepository: ProfesorRepository){
+  constructor(
+    private readonly profesorRepository: ProfesorRepository,
+    private readonly validateProfesor: ProfesorValidatorService
+    ){
   }
   
   public getAllProfesores(req: Request, res: Response){
@@ -26,7 +30,7 @@ export class ProfesorController {
     
     const nuevoProfesor = new Profesor(id, numeroEmpleado, nombres, apellidos, horasClase);
   
-    if (!nuevoProfesor.isValid()) {
+    if (!this.validateProfesor.isValid(nuevoProfesor)) {
       res.status(400).send({ error: 'Datos de profesor no válidos'});
       return;
     }
@@ -40,7 +44,7 @@ export class ProfesorController {
   
     const updatedProfesor = new Profesor(id, numeroEmpleado, nombres, apellidos, horasClase);
   
-    if (!updatedProfesor.isValid()) {
+    if (!this.validateProfesor.isValid(updatedProfesor)) {
       res.status(400).send({ error: 'Datos de profesor no válidos'}); 
       return;
     }

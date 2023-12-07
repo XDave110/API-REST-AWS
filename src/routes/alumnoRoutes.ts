@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { AlumnoController } from '../controllers/AlumnoController';
 import { AlumnoRepository } from '../repository/AlumnoRepository';
+import { AlumnoValidatorService } from '../service/validateAlumnoService';
 
 const alumnoRouter = Router();
-const alumnoController = new AlumnoController(new AlumnoRepository());
+const alumnoController = new AlumnoController(new AlumnoRepository(),new AlumnoValidatorService);
 
 alumnoRouter.get('/alumnos', alumnoController.getAllAlumnos.bind(alumnoController));
 

@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { ProfesorController } from "../controllers/ProfesorController";
 import { ProfesorRepository } from "../repository/ProfesorRepository";
+import { ProfesorValidatorService } from "../service/validateProfesorService";
 
 const profesorRouter = Router();
-const profesorController = new ProfesorController(new ProfesorRepository())
+const profesorController = new ProfesorController(new ProfesorRepository(), new ProfesorValidatorService)
 
 profesorRouter.get('/profesores', profesorController.getAllProfesores.bind(profesorController));
 

@@ -1,9 +1,13 @@
 import { Request, Response } from 'express';
 import { AlumnoRepository } from '../repository/AlumnoRepository';
 import { Alumno } from "../entity/Alumno";
+import { AlumnoValidatorService } from '../service/validateAlumnoService';
 
 export class AlumnoController {
-  constructor(private readonly alumnoRepository: AlumnoRepository){
+  constructor(
+    private readonly alumnoRepository: AlumnoRepository,
+    private readonly validateAlumno: AlumnoValidatorService
+    ){
   }
   public getAllAlumnos(req: Request, res: Response){
     const alumnos = this.alumnoRepository.getAllAlumnos();
@@ -25,7 +29,7 @@ export class AlumnoController {
     
     const nuevoAlumno = new Alumno(id, nombres, apellidos, matricula, promedio);
   
-    if (!nuevoAlumno.isValid()) {
+    if (!this.validateAlumno.isValid(nuevoAlumno)) {
       res.status(400).send({ error: 'Datos de alumno no validos'})
       return;
     }
@@ -39,7 +43,7 @@ export class AlumnoController {
     const { nombres, apellidos, matricula, promedio } = req.body;
     const updatedAlumno = new Alumno(id,nombres,apellidos,matricula,promedio)
   
-    if (!updatedAlumno.isValid()) {
+    if (!this.validateAlumno.isValid(updatedAlumno)) {
       res.status(400).send({erorr: 'Datos de alumno no válidos'}); 
       return;
     }
