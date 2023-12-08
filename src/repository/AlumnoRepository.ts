@@ -1,34 +1,51 @@
+import { PrismaClient } from "@prisma/client";
 import { Alumno } from "../entity/Alumno";
 
+const prisma = new PrismaClient();
+
 export class AlumnoRepository {
-    private alumnos: Alumno[];
-   constructor(){
-    this.alumnos = []
-   }
-    getAllAlumnos(): Alumno[] {
-      return this.alumnos;
+    
+   constructor(){}
+
+    async getAllAlumnos(){
+      return await prisma.alumno.findMany();
     }
   
-    getAlumnoById(id: number): Alumno | undefined {
-      return this.alumnos.find((alumno) => alumno.id === id);
+    async getAlumnoById(id:number){
+      return await prisma.alumno.findUnique({where: { id: id,}})
     }
   
-    addAlumno(alumno: Alumno): void {
-      this.alumnos.push(alumno);
+    async addAlumno(alumno: Alumno){
+      return await prisma.alumno.create(
+        {data: {
+          nombres: alumno.nombres,
+          apellidos: alumno.apellidos,
+          matricula:alumno.matricula,
+        promedio: alumno.promedio,
+        password: alumno.password,
+        },}
+
+      );
     }
   
-    updateAlumno(updatedAlumno: Alumno): boolean {
-      const index = this.alumnos.findIndex((alumno) => alumno.id === updatedAlumno.id);
-      if (index !== -1) {
-        this.alumnos[index] = updatedAlumno;
-        return true;
-      }
-      return false;
+    async updateAlumno(id:number, alumno:Alumno) {
+      return await prisma.alumno.update({
+        where: {
+          id: id,
+        },
+        data: {
+          nombres: alumno.nombres,
+          apellidos: alumno.apellidos,
+          matricula:alumno.matricula,
+        promedio: alumno.promedio,
+        password: alumno.password,
+        },
+      })
     }
   
-    deleteAlumno(id: number): boolean {
-      const initialLength = this.alumnos.length;
-      this.alumnos = this.alumnos.filter((alumno) => alumno.id !== id);
-      return this.alumnos.length !== initialLength;
+    async deleteAlumno(id: number){
+      return await prisma.alumno.delete({where: {
+        id: id
+      }})
     }
   }

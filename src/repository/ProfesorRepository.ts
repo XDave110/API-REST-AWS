@@ -1,36 +1,52 @@
+import { PrismaClient } from "@prisma/client";
 import { Profesor } from "../entity/Profesor";
 
+const prisma = new PrismaClient()
+
 export class ProfesorRepository {
-  private profesores: Profesor[];
 
-  constructor() {
-    this.profesores = [];
+  constructor() {  }
+
+  async getAllProfesores() {
+    return await prisma.profesor.findMany()
   }
 
-  getAllProfesores(): Profesor[] {
-    return this.profesores;
+  async getProfesorById(id: number) {
+    return await prisma.profesor.findUnique({where: {id: id}})
   }
 
-  getProfesorById(id: number): Profesor | undefined {
-    return this.profesores.find((profesor) => profesor.id === id);
+  async addProfesor(profesor: Profesor) {
+    return await prisma.profesor.create(
+      {data: {
+        numeroEmpleado: profesor.numeroEmpleado,
+        nombres: profesor.nombres,
+        apellidos: profesor.apellidos,
+        horasClase: profesor.horasClase
+      },
+
+      }
+    )
   }
 
-  addProfesor(profesor: Profesor): void {
-    this.profesores.push(profesor);
+  async updateProfesor(id: number, profesor: Profesor) {
+    return await prisma.profesor.update({
+      where:{
+        id: id,
+      },
+      data: {
+        numeroEmpleado: profesor.numeroEmpleado,
+        nombres: profesor.nombres,
+        apellidos: profesor.apellidos,
+        horasClase: profesor.horasClase
+      }
+    })
   }
 
-  updateProfesor(updatedProfesor: Profesor): boolean {
-    const index = this.profesores.findIndex((profesor) => profesor.id === updatedProfesor.id);
-    if (index !== -1) {
-      this.profesores[index] = updatedProfesor;
-      return true;
-    }
-    return false;
-  }
-
-  deleteProfesor(id: number): boolean {
-    const initialLength = this.profesores.length;
-    this.profesores = this.profesores.filter((profesor) => profesor.id !== id);
-    return this.profesores.length !== initialLength;
+  async deleteProfesor(id: number){
+    return await prisma.profesor.delete({
+      where: { 
+        id: id
+      }
+    })
   }
 }

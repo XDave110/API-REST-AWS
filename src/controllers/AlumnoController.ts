@@ -9,62 +9,89 @@ export class AlumnoController {
     private readonly validateAlumno: AlumnoValidatorService
     ){
   }
-  public getAllAlumnos(req: Request, res: Response){
-    const alumnos = this.alumnoRepository.getAllAlumnos();
-    res.status(200).send(alumnos); 
-  }
-
-  public getAlumnoById(id: number, req: Request, res: Response){
-    const alumno = this.alumnoRepository.getAlumnoById(id);
-  
-    if (alumno) {
-      res.status(200).send(alumno); 
-    } else {
-      res.status(404).send({error: 'Alumno no encontrado'});
+  public async getAllAlumnos  (req: Request, res: Response){
+    try {
+      const items = await this.alumnoRepository.getAllAlumnos();
+      res.status(200).json(items);
+    } catch (error) {
+      res.status(500).json({ error: 'Unable to fetch items' });
     }
   }
 
-  public createAlumno(req: Request, res: Response) {
-    const { id, nombres, apellidos, matricula, promedio } = req.body;
-    
-    const nuevoAlumno = new Alumno(id, nombres, apellidos, matricula, promedio);
-  
+  public async getAlumnoById(id: number, req: Request, res: Response){
+    try {
+      const alumno = await this.alumnoRepository.getAlumnoById(id);
+      if (alumno) {
+        res.status(200).json(alumno);
+      } else {
+        res.status(404).json({ message: 'Item not found' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Unable to fetch item' });
+    }
+
+  }
+
+  public async createAlumno(req: Request, res: Response) {
+    const { nombres, apellidos, matricula, promedio, password } = req.body;
+
+    const nuevoAlumno = new Alumno(nombres, apellidos, matricula, promedio, password);
+
     if (!this.validateAlumno.isValid(nuevoAlumno)) {
-      res.status(400).send({ error: 'Datos de alumno no validos'})
+      res.status(400).send({ error: 'Datos de alumno no válidos' });
       return;
     }
-  
-    this.alumnoRepository.addAlumno(nuevoAlumno);
-    res.status(201).send({error:'Alumno creado exitosamente'});
+
+    try {
+      const alumno = await this.alumnoRepository.addAlumno(nuevoAlumno);
+      const id = alumno.id; 
+      res.status(201).send({ status: 'Alumno creado exitosamente', id});
+    } catch (error) {
+      
+    }
   }
 
-  public updateAlumno(id: number,req: Request, res: Response){
+  public async updateAlumno(id: number,req: Request, res: Response){
     
-    const { nombres, apellidos, matricula, promedio } = req.body;
-    const updatedAlumno = new Alumno(id,nombres,apellidos,matricula,promedio)
+    const { nombres, apellidos, matricula, promedio, password } = req.body;
+    const updatedAlumno = new Alumno(nombres, apellidos, matricula, promedio, password)
   
     if (!this.validateAlumno.isValid(updatedAlumno)) {
       res.status(400).send({erorr: 'Datos de alumno no válidos'}); 
       return;
     }
   
-    const updated = this.alumnoRepository.updateAlumno(updatedAlumno);
-  
-    if (updated) {
-      res.status(200).send({error: 'Alumno actualizado exitosamente'}); 
-    } else {
-      res.status(404).send({errro: 'Alumno no encontrado para actualizar'});
+   
+  try {
+    const alumnoExistente = await this.alumnoRepository.getAlumnoById(id);
+    if (!alumnoExistente) {
+      res.status(404).send({ error: 'Alumno no encontrado' });
+      return;
     }
+   
+    const updated = await this.alumnoRepository.updateAlumno(id,updatedAlumno);
+    res.status(200).send({status: 'Alumno actualizado exitosamente'}); 
+    
+      
+  } catch (error) {
+    res.status(500).send({ error: 'Error servidor' });
   }
-  public deleteAlumno(id: number, req: Request, res: Response){
+   
+  }
+  public async deleteAlumno(id: number, req: Request, res: Response){
   
-    const deleted = this.alumnoRepository.deleteAlumno(id);
-  
-    if (deleted) {
-      res.status(200).send({error: 'Alumno eliminado exitosamente'});
-    } else {
-      res.status(404).send({error: 'Alumno no encontrado para eliminar'});
+    
+  try {
+    const alumnoExistente = await this.alumnoRepository.getAlumnoById(id);
+    if (!alumnoExistente) {
+      res.status(404).send({ error: 'Alumno no encontrado' });
+      return;
     }
+    const deleted = await this.alumnoRepository.deleteAlumno(id);
+    res.status(200).send({status: 'Alumno eliminado exitosamente'});
+  } catch (error) {
+    res.status(500).send({error: 'Error servidor'});
+  }
   }
 
 }
