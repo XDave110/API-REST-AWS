@@ -42,6 +42,16 @@ export class AlumnoRepository {
         },
       })
     }
+    async updateAlumnoURl(id:number, fotoUrl: (string|null)) {
+      return await prisma.alumno.update({
+        where: {
+          id: id,
+        },
+        data: {
+          fotoPerfilUrl: fotoUrl,
+        },
+      })
+    }
   
     async deleteAlumno(id: number){
       return await prisma.alumno.delete({where: {

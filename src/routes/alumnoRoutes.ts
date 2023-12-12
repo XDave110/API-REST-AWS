@@ -2,9 +2,13 @@ import { Router } from 'express';
 import { AlumnoController } from '../controllers/AlumnoController';
 import { AlumnoRepository } from '../repository/AlumnoRepository';
 import { AlumnoValidatorService } from '../service/validateAlumnoService';
+import { DB } from '../infraestructura/DB';
+import { S3Service } from '../infraestructura/awsBucket';
+import multer from 'multer';
 
 const alumnoRouter = Router();
-const alumnoController = new AlumnoController(new AlumnoRepository(),new AlumnoValidatorService);
+const alumnoController = new AlumnoController( new S3Service(),new DB(),new AlumnoRepository(),new AlumnoValidatorService);
+const upload = multer({ dest: 'uploads/' });
 
 alumnoRouter.get('/alumnos', alumnoController.getAllAlumnos.bind(alumnoController));
 
@@ -27,6 +31,27 @@ alumnoRouter.delete('/alumnos/:id', (req, res) => {
 
 alumnoRouter.all('/alumnos', (_, res) => {
   res.status(405).send('Método no permitido');
+});
+
+alumnoRouter.post('/alumnos/:id/fotoPerfil', upload.single('foto'),(req, res) => {
+  const alumnoId: number = parseInt(req.params.id);
+  alumnoController.uploadProfilePicture(alumnoId, req, res);
+})
+
+alumnoRouter.post('/alumnos/:id/session/login',(req, res) => {
+  const alumnoId: number = parseInt(req.params.id);
+  const alumnoPassword: string = req.body.password
+  alumnoController.loginAlumno(alumnoId,alumnoPassword, req, res);
+});
+
+alumnoRouter.post('/alumnos/:id/session/verify', (req, res) => {
+  const alumnoId: number = parseInt(req.params.id);
+  alumnoController.verifySession(alumnoId, req, res);
+});
+
+alumnoRouter.post('/alumnos/:id/session/logout', (req, res) => {
+  const alumnoId: number = parseInt(req.params.id);
+  alumnoController.logoutAlumno(alumnoId, req, res);
 });
 
 export default alumnoRouter;
