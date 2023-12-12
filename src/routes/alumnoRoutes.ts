@@ -2,12 +2,13 @@ import { Router } from 'express';
 import { AlumnoController } from '../controllers/AlumnoController';
 import { AlumnoRepository } from '../repository/AlumnoRepository';
 import { AlumnoValidatorService } from '../service/validateAlumnoService';
-import { DB } from '../infraestructura/DB';
+import { DB } from '../infraestructura/awsDynamoDB';
 import { S3Service } from '../infraestructura/awsBucket';
 import multer from 'multer';
+import { SNSService } from '../infraestructura/awsSNS';
 
 const alumnoRouter = Router();
-const alumnoController = new AlumnoController( new S3Service(),new DB(),new AlumnoRepository(),new AlumnoValidatorService);
+const alumnoController = new AlumnoController(new SNSService(), new S3Service(),new DB(),new AlumnoRepository(),new AlumnoValidatorService);
 const upload = multer({ dest: 'uploads/' });
 
 alumnoRouter.get('/alumnos', alumnoController.getAllAlumnos.bind(alumnoController));
@@ -54,4 +55,8 @@ alumnoRouter.post('/alumnos/:id/session/logout', (req, res) => {
   alumnoController.logoutAlumno(alumnoId, req, res);
 });
 
+alumnoRouter.post('/alumnos/:id/email',(req, res) => {
+  const alumnoId: number = parseInt(req.params.id);
+  alumnoController.sendMail(alumnoId, req, res);
+});
 export default alumnoRouter;

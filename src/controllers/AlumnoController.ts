@@ -4,13 +4,15 @@ import { Alumno } from "../entity/Alumno";
 import { AlumnoValidatorService } from '../service/validateAlumnoService';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
-import { DB } from '../infraestructura/DB';
+import { DB } from '../infraestructura/awsDynamoDB';
 import { S3Service } from '../infraestructura/awsBucket';
 import * as fs from 'fs';
+import { SNSService } from '../infraestructura/awsSNS';
 
 
 export class AlumnoController {
   constructor(
+    private readonly sns: SNSService,
     private readonly s3Bucket: S3Service,
     private readonly dynamoDB: DB,
     private readonly alumnoRepository: AlumnoRepository,
@@ -195,25 +197,46 @@ export class AlumnoController {
 
 
 
-  async uploadProfilePicture(alumnoId: number, req: Request, res: Response) {
+  async uploadProfilePicture(id: number, req: Request, res: Response) {
     try {
-      const alumnoExistente = await this.alumnoRepository.getAlumnoById(alumnoId);
+      const alumnoExistente = await this.alumnoRepository.getAlumnoById(id);
 
       if (!alumnoExistente) {
         res.status(404).json({ error: 'Alumno no encontrado' });
         return;
       }
       const file = (req as any).file;
-      const filePath = `alumnos/${alumnoId}/${file.originalname}`;
+      const filePath = `alumnos/${id}/${file.originalname}`;
       const fileBuffer = fs.readFileSync(file.path);
       const url = await this.s3Bucket.uploadFileToBucket(filePath, fileBuffer);
-      await this.alumnoRepository.updateAlumnoURl(alumnoId, url);
+      await this.alumnoRepository.updateAlumnoURl(id, url);
       res.status(200).json({ fotoPerfilUrl: url });
     } catch (error) {
       console.error('Error al procesar la imagen de perfil:', error);
       res.status(500).json({ error: 'Error al procesar la imagen de perfil' });
     }
   }
+
+  async sendMail(id: number, req: Request, res: Response) {
+    try {
+      const alumnoExistente = await this.alumnoRepository.getAlumnoById(id);
+
+      if (!alumnoExistente) {
+        res.status(404).json({ error: 'Alumno no encontrado' });
+        return;
+      }
+
+      const mensaje = `Estimado alumno ${alumnoExistente.nombres} ${alumnoExistente.apellidos}, tus calificaciones son: ${alumnoExistente.promedio}`;
+
+      await this.sns.enviarMensajeAlumno(mensaje);
+
+      res.status(200).json({ message: 'Mensaje enviado con éxito al alumno.' });
+    } catch (error) {
+      console.error('Error al enviar el mensaje:', error);
+      res.status(500).json({ error: 'Error al enviar el mensaje al alumno.' });
+    }
+  }
+
 
 
 }
